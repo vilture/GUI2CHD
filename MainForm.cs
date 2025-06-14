@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace GUI2CHD
 {
@@ -31,19 +32,18 @@ namespace GUI2CHD
         private Process? currentProcess;
         private CancellationTokenSource? cancellationTokenSource;
         private bool isConverting = false;
-        private TextBox detailedLogBox;
+        private TextBox? detailedLogBox;
         private Settings settings;
-        private ProgressBar extractProgressBar;
-        private Label lblExtractProgress;
-        private ListBox pendingList;
-        private ListBox completedList;
-        private TextBox logBox;
-        private ProgressBar progressBar;
-        private Label lblOutputFolder;
-        private Label lblPending;
-        private Label lblCompletedList;
-        private Label lblMainLog;
-        private Label lblDetailedLog;
+        private ProgressBar? extractProgressBar;
+        private Label? lblExtractProgress;
+        private ListBox? pendingList;
+        private ListBox? completedList;
+        private TextBox? logBox;
+        private Label? lblOutputFolder;
+        private Label? lblPending;
+        private Label? lblCompletedList;
+        private Label? lblMainLog;
+        private Label? lblDetailedLog;
 
         private readonly Dictionary<string, Dictionary<string, string>> translations = new()
         {
@@ -213,7 +213,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             this.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         }
 
-        private void MainForm_Resize(object sender, EventArgs e)
+        private void MainForm_Resize(object? sender, EventArgs e)
         {
             // Обновляем размеры элементов управления при изменении размера формы
             int rightMargin = 20;
@@ -221,7 +221,6 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             int buttonHeight = 30;
             int labelHeight = 20;
             int listBoxSpacing = 20;
-            int logBoxSpacing = 20;
             int menuHeight = this.MainMenuStrip.Height;
 
             // Обновляем размеры списков
@@ -261,8 +260,11 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             logBox.Size = new Size(listBoxWidth, listBoxHeight);
 
             lblDetailedLog.Location = new Point(rightMargin + listBoxWidth + rightMargin, menuHeight + buttonHeight + 20 + labelHeight + 5 + listBoxHeight + listBoxSpacing);
-            detailedLogBox.Location = new Point(rightMargin + listBoxWidth + rightMargin, menuHeight + buttonHeight + 20 + labelHeight + 5 + listBoxHeight + listBoxSpacing + labelHeight + 5);
-            detailedLogBox.Size = new Size(listBoxWidth, listBoxHeight);
+            if (detailedLogBox != null)
+            {
+                detailedLogBox.Location = new Point(rightMargin + listBoxWidth + rightMargin, menuHeight + buttonHeight + 20 + labelHeight + 5 + listBoxHeight + listBoxSpacing + labelHeight + 5);
+                detailedLogBox.Size = new Size(listBoxWidth, listBoxHeight);
+            }
 
             // Обновляем позиции и размеры прогресс-бара
             lblExtractProgress.Location = new Point(rightMargin + listBoxWidth + rightMargin, menuHeight + 35);
@@ -448,7 +450,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             MainForm_Resize(this, EventArgs.Empty);
         }
 
-        private void PathsMenuItem_Click(object sender, EventArgs e)
+        private void PathsMenuItem_Click(object? sender, EventArgs e)
         {
             var t = translations.ContainsKey(settings.Language) ? translations[settings.Language] : translations["ru"];
             using (Form settingsForm = new Form())
@@ -591,7 +593,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             }
         }
 
-        private void BtnSelectFiles_Click(object sender, EventArgs e)
+        private void BtnSelectFiles_Click(object? sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -759,10 +761,15 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                     progressForm.Refresh();
                 });
 
+                await progressForm.InvokeAsync(() => {
+                    progressForm.ProgressBar.Style = ProgressBarStyle.Continuous;
+                    progressForm.ProgressBar.Value = 0;
+                });
+
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = sevenZipPath,
-                    Arguments = $"x \"{archivePath}\" -o\"{extractPath}\" -y",
+                    Arguments = $"x \"{archivePath}\" -o\"{extractPath}\" -y -bsp1",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -773,25 +780,38 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                 {
                     if (process != null)
                     {
+                        bool percentParsed = false;
                         while (!process.StandardOutput.EndOfStream)
                         {
                             string? line = await process.StandardOutput.ReadLineAsync();
                             if (line != null && progressForm != null)
                             {
                                 // Пытаемся извлечь процент из строки
-                                if (line.Contains("%"))
+                                var percentMatch = System.Text.RegularExpressions.Regex.Match(line, @"(\d+)%");
+                                if (percentMatch.Success && int.TryParse(percentMatch.Groups[1].Value, out int percent))
                                 {
-                                    string[] parts = line.Split('%');
-                                    if (parts.Length > 0 && int.TryParse(parts[0].Trim(), out int percent))
-                                    {
-                                        await progressForm.InvokeAsync(() =>
-                                        {
-                                            progressForm.ProgressBar.Value = Math.Min(percent, 100);
-                                        });
-                                    }
+                                    percentParsed = true;
+                                    await progressForm.InvokeAsync(() => {
+                                        progressForm.ProgressBar.Style = ProgressBarStyle.Continuous;
+                                        progressForm.ProgressBar.Value = Math.Min(percent, 100);
+                                    });
                                 }
                             }
                         }
+
+                        // Если ни разу не удалось получить процент — включаем Marquee
+                        if (!percentParsed && progressForm != null)
+                        {
+                            await progressForm.InvokeAsync(() => {
+                                progressForm.ProgressBar.Style = ProgressBarStyle.Marquee;
+                            });
+                        }
+
+                        // После завершения — возвращаем стиль
+                        await progressForm.InvokeAsync(() => {
+                            progressForm.ProgressBar.Style = ProgressBarStyle.Continuous;
+                            progressForm.ProgressBar.Value = 100;
+                        });
 
                         await process.WaitForExitAsync();
                         if (process.ExitCode == 0)
@@ -895,7 +915,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             btnConvert.Enabled = pendingFiles.Count > 0 && !string.IsNullOrWhiteSpace(settings.OutputFolder);
         }
 
-        private async void BtnConvert_Click(object sender, EventArgs e)
+        private async void BtnConvert_Click(object? sender, EventArgs e)
         {
             if (isConverting) return;
 
@@ -1048,7 +1068,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                             while (!ccd2isoProcess.StandardOutput.EndOfStream)
                             {
                                 string? line = ccd2isoProcess.StandardOutput.ReadLine();
-                                if (line != null)
+                                if (line != null && detailedLogBox != null)
                                 {
                                     detailedLogBox.Invoke((MethodInvoker)(() =>
                                     {
@@ -1094,7 +1114,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                         while (!currentProcess.StandardOutput.EndOfStream)
                         {
                             string? line = currentProcess.StandardOutput.ReadLine();
-                            if (line != null)
+                            if (line != null && detailedLogBox != null)
                             {
                                 detailedLogBox.Invoke((MethodInvoker)(() =>
                                 {
@@ -1111,7 +1131,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                         while (!currentProcess.StandardError.EndOfStream)
                         {
                             string? line = currentProcess.StandardError.ReadLine();
-                            if (line != null)
+                            if (line != null && detailedLogBox != null)
                             {
                                 detailedLogBox.Invoke((MethodInvoker)(() =>
                                 {
@@ -1144,7 +1164,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             });
         }
 
-        private void BtnStop_Click(object sender, EventArgs e)
+        private void BtnStop_Click(object? sender, EventArgs e)
         {
             if (isConverting)
             {
@@ -1177,7 +1197,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             catch { }
         }
 
-        private void AboutMenuItem_Click(object sender, EventArgs e)
+        private void AboutMenuItem_Click(object? sender, EventArgs e)
         {
             var t = translations.ContainsKey(settings.Language) ? translations[settings.Language] : translations["ru"];
             using (Form aboutForm = new Form())
@@ -1238,7 +1258,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             }
         }
 
-        private void PendingList_DragEnter(object sender, DragEventArgs e)
+        private void PendingList_DragEnter(object? sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -1253,24 +1273,24 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                 if (hasValidFiles)
                 {
                     e.Effect = DragDropEffects.Copy;
-                    pendingList.BackColor = System.Drawing.Color.LightGreen;
+                    if (pendingList != null) pendingList.BackColor = System.Drawing.Color.LightGreen;
                 }
                 else
                 {
                     e.Effect = DragDropEffects.None;
-                    pendingList.BackColor = System.Drawing.Color.LightPink;
+                    if (pendingList != null) pendingList.BackColor = System.Drawing.Color.LightPink;
                 }
             }
         }
 
-        private void PendingList_DragLeave(object sender, EventArgs e)
+        private void PendingList_DragLeave(object? sender, EventArgs e)
         {
-            pendingList.BackColor = System.Drawing.SystemColors.Window;
+            if (pendingList != null) pendingList.BackColor = System.Drawing.SystemColors.Window;
         }
 
-        private void PendingList_DragDrop(object sender, DragEventArgs e)
+        private void PendingList_DragDrop(object? sender, DragEventArgs e)
         {
-            pendingList.BackColor = System.Drawing.SystemColors.Window;
+            if (pendingList != null) pendingList.BackColor = System.Drawing.SystemColors.Window;
             
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -1287,7 +1307,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             }
         }
 
-        private void PendingList_KeyDown(object sender, KeyEventArgs e)
+        private void PendingList_KeyDown(object? sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete && pendingList.SelectedItems.Count > 0)
             {
@@ -1299,7 +1319,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             }
         }
 
-        private void LanguageMenuItem_Click(object sender, EventArgs e)
+        private void LanguageMenuItem_Click(object? sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem item && item.Tag is string lang)
             {
@@ -1363,6 +1383,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             if (lblOutputFolder != null && (lblOutputFolder.Text == "Папка не выбрана" || lblOutputFolder.Text == "Folder not selected" || lblOutputFolder.Text == "未选择文件夹"))
                 lblOutputFolder.Text = t["OutputFolder"];
             if (lblExtractProgress != null) lblExtractProgress.Text = t["Progress"];
+            if (pendingList != null) pendingList.BackColor = System.Drawing.SystemColors.Window;
         }
     }
 } 
