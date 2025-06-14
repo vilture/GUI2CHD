@@ -86,7 +86,7 @@ namespace GUI2CHD
                 ["AboutComponents"] = "Используемые компоненты:",
                 ["AboutComponent1"] = "1. chdman\n   - Часть проекта MAME\n   - Лицензия: BSD-3-Clause\n   - https://www.mamedev.org/",
                 ["AboutComponent2"] = "2. 7-Zip\n   - Автор: Igor Pavlov\n   - Лицензия: GNU LGPL\n   - https://www.7-zip.org/",
-                ["AboutComponent3"] = "3. ccd2iso\n   - Конвертер образов CloneCD в ISO\n   - Лицензия: GNU GPL v2\n   - https://github.com/ccd2iso/ccd2iso",
+                ["AboutComponent3"] = "3. ccd2iso\n   - Конвертер образов CloneCD в ISO\n   - Лицензия: GNU GPL v2\n   - https://github.com/jkmartindale/ccd2iso",
                 ["AboutComponent4"] = "4. .NET 6.0\n   - Microsoft Corporation\n   - Лицензия: MIT\n   - https://dotnet.microsoft.com/",
                 ["AboutLegalNotice"] = "Отказ от ответственности:\nДанная программа предназначена для конвертации легально приобретенных образов дисков в формат CHD.\nПользователь несет полную ответственность за соблюдение авторских прав при использовании программы.",
                 ["MITLicense"] = @"MIT License
@@ -136,7 +136,7 @@ namespace GUI2CHD
                 ["AboutComponents"] = "Used components:",
                 ["AboutComponent1"] = "1. chdman\n   - Part of MAME project\n   - License: BSD-3-Clause\n   - https://www.mamedev.org/",
                 ["AboutComponent2"] = "2. 7-Zip\n   - Author: Igor Pavlov\n   - License: GNU LGPL\n   - https://www.7-zip.org/",
-                ["AboutComponent3"] = "3. ccd2iso\n   - CloneCD to ISO converter\n   - License: GNU GPL v2\n   - https://github.com/ccd2iso/ccd2iso",
+                ["AboutComponent3"] = "3. ccd2iso\n   - CloneCD to ISO converter\n   - License: GNU GPL v2\n   - https://github.com/jkmartindale/ccd2iso",
                 ["AboutComponent4"] = "4. .NET 6.0\n   - Microsoft Corporation\n   - License: MIT\n   - https://dotnet.microsoft.com/",
                 ["AboutLegalNotice"] = "Legal Notice:\nThis program is intended for converting legally acquired disk images to CHD format.\nThe user is fully responsible for compliance with copyright laws when using the program.",
                 ["MITLicense"] = @"MIT License
@@ -186,7 +186,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                 ["AboutComponents"] = "使用的组件：",
                 ["AboutComponent1"] = "1. chdman\n   - Part of MAME project\n   - License: BSD-3-Clause\n   - https://www.mamedev.org/",
                 ["AboutComponent2"] = "2. 7-Zip\n   - Author: Igor Pavlov\n   - License: GNU LGPL\n   - https://www.7-zip.org/",
-                ["AboutComponent3"] = "3. ccd2iso\n   - CloneCD to ISO converter\n   - License: GNU GPL v2\n   - https://github.com/ccd2iso/ccd2iso",
+                ["AboutComponent3"] = "3. ccd2iso\n   - CloneCD to ISO converter\n   - License: GNU GPL v2\n   - https://github.com/jkmartindale/ccd2iso",
                 ["AboutComponent4"] = "4. .NET 6.0\n   - Microsoft Corporation\n   - License: MIT\n   - https://dotnet.microsoft.com/",
                 ["AboutLegalNotice"] = "法律声明：\n本程序用于将合法获取的磁盘镜像转换为CHD格式。\n用户在使用本程序时需完全遵守版权法。",
                 ["MITLicense"] = @"MIT License

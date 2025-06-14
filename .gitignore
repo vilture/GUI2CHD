@@ -112,4 +112,10 @@ build/
 *.dll
 *.pdb
 *.pyc
-__pycache__/ 
+__pycache__/
+
+# Исключения
+!7za/**/*.exe
+!7za/**/*.dll
+!convert/**/*.exe
+!convert/**/*.dll 
