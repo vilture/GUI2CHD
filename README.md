@@ -29,7 +29,7 @@ GUI2CHD - это графический интерфейс для конверт
 3. ccd2iso
    - Конвертер образов CloneCD в ISO
    - Лицензия: GNU GPL v2
-   - [https://github.com/ccd2iso/ccd2iso](https://github.com/jkmartindale/ccd2iso)
+   - https://github.com/jkmartindale/ccd2iso
 
 4. .NET 6.0
    - Microsoft Corporation
