@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <None Include="icon.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <!-- Удалено копирование icon.ico в выходную папку -->
     </None>
   </ItemGroup>
 

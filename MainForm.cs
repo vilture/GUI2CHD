@@ -210,11 +210,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
             this.Resize += MainForm_Resize;
             
             // Устанавливаем иконку формы
-            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icon.ico");
-            if (File.Exists(iconPath))
-            {
-                this.Icon = new System.Drawing.Icon(iconPath);
-            }
+            this.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         }
 
         private void MainForm_Resize(object sender, EventArgs e)
@@ -464,7 +460,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                 settingsForm.MinimizeBox = false;
                 settingsForm.StartPosition = FormStartPosition.CenterParent;
                 settingsForm.Padding = new Padding(10);
-                settingsForm.Icon = this.Icon;
+                settingsForm.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
                 Label lblOutputFolder = new Label
                 {
@@ -1192,7 +1188,7 @@ THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMP
                 aboutForm.MaximizeBox = false;
                 aboutForm.MinimizeBox = false;
                 aboutForm.StartPosition = FormStartPosition.CenterParent;
-                aboutForm.Icon = this.Icon;
+                aboutForm.Icon = System.Drawing.Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
                 RichTextBox textBox = new RichTextBox
                 {
